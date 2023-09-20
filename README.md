@@ -1,0 +1,1 @@
+# FLIR_BosonSDKforPython
