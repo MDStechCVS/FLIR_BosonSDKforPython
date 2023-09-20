@@ -45,7 +45,6 @@ class VideoUtilsClass():
                 self.videInit = True
         self.windows.log_write(f"cam{window_num} start!")
         cnt = 0
-        start_time = time.time()
         while True:
             try:
                 cnt += 1 
@@ -54,10 +53,6 @@ class VideoUtilsClass():
                     print(f"window_num{window_num} is None")
                     continue
                 self.windows.show_img(self.cam, window_num)
-                if time.time() - start_time >= 1.0:
-                    print(f'cam{window_num}   => 1초 동안 찍힌 이미지 개수: {cnt}')
-                    cnt = 0
-                    start_time = time.time()
                     
                 if self.videoWriteNow == True:
                         if self.out != None:
@@ -72,7 +67,6 @@ class VideoUtilsClass():
                 time.sleep(0.05)
             except Exception as e:
                 print(f"Error code = {traceback.format_exc()}")
-                debug.info(f"Error code = {traceback.format_exc()}")
                 pass
         
 
