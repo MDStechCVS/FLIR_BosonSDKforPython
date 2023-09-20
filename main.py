@@ -1,5 +1,3 @@
-# setting 캔버스 정리!
-
 import logging
 import traceback
 import tkinter as tk
