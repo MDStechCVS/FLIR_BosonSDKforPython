@@ -2,9 +2,14 @@
 
 # FLIR_BosonSDKforPython
 
-# Installation
----
-### git clone https://github.com/MDStechCVS/FLIR_BosonSDKforPython<br>
-### pip install -r requirements.txt<br>
-### python main.py<br>
----
+## <div align="center">Install</div>
+Clone repo and install [requirements.txt](https://github.com/MDStechCVS/FLIR_BosonSDKforPython/edit/main/requirements.txt) in a
+[**Python>=3.7.0**](https://www.python.org/) environment
+
+```bash
+git clone https://github.com/MDStechCVS/FLIR_BosonSDKforPython
+pip install -r requirements.txt
+python main.py
+```
+
+
