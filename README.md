@@ -22,5 +22,5 @@ python main.py
 ![333](https://github.com/MDStechCVS/FLIR_BosonSDKforPython/assets/142575573/e2976393-4cbe-42bf-be89-a79ed900f602)
 
 ## <div align="left">Contact</div>
-For bugs and inquiries, please contact us through GitHub Issues or team email.
+For bugs and inquiries, please contact us through GitHub Issues or team email.<br>
 team email : cvs_team@mdstech.co.kr
