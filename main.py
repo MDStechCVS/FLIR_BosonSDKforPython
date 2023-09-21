@@ -55,8 +55,6 @@ class MainWindow(tk.Frame):
         self.text_ipinfo = "SERIAL / PORT"
         # widget init
         self.create_widgets()
-        # mouse event 기능 bind 
-        self.main_canvas.bind('<Button-1>', self.main_btn)
         self.main_canvas.pack(fill=tk.BOTH, expand=True)
         self.log_write('[INFO] Initialize Complete')
         trace.info('[INFO] Initialize Complete')
