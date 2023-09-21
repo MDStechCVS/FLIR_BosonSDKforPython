@@ -3,7 +3,7 @@
 # FLIR_BosonSDKforPython
 
 ## SDK caution
-This program can run on Windows 10.
+This program can run on Windows 10.<br>
 If you are using a laptop with a webcam, disable the webcam in Device Manager.
 
 
