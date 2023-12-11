@@ -22,7 +22,7 @@ python main.py
 ```
 ## Boson SDK Window
 
-![333](https://github.com/MDStechCVS/FLIR_BosonSDKforPython/assets/142575573/e2976393-4cbe-42bf-be89-a79ed900f602)
+![1](https://github.com/MDStechCVS/FLIR_BosonSDKforPython/assets/142575573/9c40a007-f359-4068-a254-75a238ebf693)
 
 ## <div align="left">Contact</div>
 For bugs and inquiries, please contact us through GitHub Issues or team email.<br>

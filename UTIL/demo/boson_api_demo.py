@@ -6,7 +6,8 @@ import cv2
 import os
 import platform
 import serial
-from BosonCamAPI import BosonCamAPI
+# from BosonCamAPI import BosonCamAPI
+from BosonCamAPI import *
 import threading
 import time
 
@@ -15,12 +16,12 @@ palette = {0:'WHITEHOT', 1:'BLACKHOT', 2:'RAINBOW', 3:'RAINBOW_HC', 4:'IRONBOW'
          , 5:'LAVA', 6:'ARCTIC', 7:'GLOBOW', 8:'GRADEDFIRE', 9:'HOTTEST',}
 
 # SET PORT Number Setting
-CAM = BosonCamAPI(portNum = 'COM5')
-CAM.conn()
+CAM = BosonCamAPI(portNum = 'COM4')
+# CAM.conn()
 
 
 # SET VideoCapture index Setting
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(2)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 512)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 
