@@ -5,8 +5,7 @@ import os
 import platform
 import serial
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from UTIL.SDK_USER_PERMISSIONS import *
-
+from BosonSDK import *
 
 class BosonCamAPI():
     """
@@ -16,12 +15,11 @@ class BosonCamAPI():
     """
     def __init__(self, portNum):
         self.OsPlatform = platform.system()
-
-        self.portNum = portNum      # 윈도우 라면... COM 뒤에 붙는 번호, 리눅스 이면 /dev/ttyACM 뒤에 번호
-
-        self.isConnect = False      # boson cam 커넥션 여부 확인
-
+        self.portNum = portNum      
+        self.isConnect = False  
+        self.myCam = None
         self.ProductName = 'N/A'
+        self.conn()
 
     def getOSPlatform(self):
         return self.OsPlatform
@@ -35,10 +33,10 @@ class BosonCamAPI():
         """
         try:
             if self.OsPlatform == 'Windows':
-                self.myport = pyClient.Initialize(manualport= str(self.portNum), manual_baud = 921600)
+                print("window port")
+                self.myCam = CamAPI.pyClient(manualport=self.portNum)
             else:
-                self.myport = pyClient.Initialize(manualport='/dev/ttyACM' + str(self.portNum))
-
+                self.myCam = CamAPI.pyClient(manualport=self.portNum)
             self.isConnect = True   # boson cam 커넥션 OK
             return True
         except:
@@ -49,17 +47,18 @@ class BosonCamAPI():
 
     def close(self):
         try:
-            pyClient.Close(self.myport)
+            CamAPI.pyClient.Close(self.myCam)
             self.isConnect = False
             current_func_name = sys._getframe().f_code.co_name
+            print("Closed Complete")
         except Exception as e:
-            print(f"Close {self.myport} FAIL")
+            print(f"Close {self.myCam} FAIL")
 
 
     def sysinfoGetProductName(self):
         returnVal = 'N/A'
         if self.isConnect == True:
-            rValue, self.ProductName = pyClient.sysinfoGetProductName()
+            rValue, self.ProductName = self.myCam.sysinfoGetProductName()
             returnVal = self.ProductName
 
         return returnVal
@@ -69,17 +68,15 @@ class BosonCamAPI():
     def getSerialNumber(self):
         returnVal = 'N/A'
         if self.isConnect == True:
-            rValue, self.serialNum = pyClient.bosonGetCameraSN()
-            print(self.serialNum)
-            print(rValue)
-            returnVal = self.serialNum
+            ret, serialNum = self.myCam.bosonGetCameraSN()
+            returnVal = serialNum
 
         return returnVal
 
     def colorLutGetId(self):
         returnVal = 0
         if self.isConnect == True:
-            rValue, self.colorLutVal = pyClient.colorLutGetId()
+            rValue, self.colorLutVal = self.myCam.colorLutGetId()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 print(self.colorLutVal)
@@ -95,7 +92,7 @@ class BosonCamAPI():
 
         if self.isConnect == True:
             data = FLR_COLORLUT_ID_E(colVal)
-            rValue = pyClient.colorLutSetId(data)
+            rValue = self.myCam.colorLutSetId(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -106,7 +103,7 @@ class BosonCamAPI():
     def scalerGetMaxZoom(self):
         returnVal = 'N/A'
         if self.isConnect == True:
-            rValue, self.zoomMaxVal = pyClient.scalerGetMaxZoom()
+            rValue, self.zoomMaxVal = self.myCam.scalerGetMaxZoom()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 print(self.zoomMaxVal)
@@ -120,7 +117,7 @@ class BosonCamAPI():
         returnVal = -1
         if self.isConnect == True:
 
-            rValue = pyClient.bosonRunFFC()
+            rValue = self.myCam.bosonRunFFC()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -135,7 +132,7 @@ class BosonCamAPI():
         yCenter = 0
 
         if self.isConnect == True:
-            rValue, self.GetZoom = pyClient.scalerGetZoom()
+            rValue, self.GetZoom = self.myCam.scalerGetZoom()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 data = FLR_SCALER_ZOOM_PARAMS_T()
@@ -161,7 +158,7 @@ class BosonCamAPI():
             data.zoom = self.SetZoom
             data.xCenter = self.xCenter
             data.yCenter = self.yCenter
-            rValue = pyClient.scalerSetZoom(data)
+            rValue = self.myCam.scalerSetZoom(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -172,7 +169,7 @@ class BosonCamAPI():
     def bosonlookupFPATempDegCx10(self):
         data = 0
         if self.isConnect == True:
-            rValue, data = pyClient.bosonlookupFPATempDegCx10()
+            rValue, data = self.myCam.bosonlookupFPATempDegCx10()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -186,7 +183,7 @@ class BosonCamAPI():
         patch = 0
 
         if self.isConnect == True:
-            rValue, major, minor, patch = pyClient.bosonGetSoftwareRev()
+            rValue, major, minor, patch = self.myCam.bosonGetSoftwareRev()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -199,7 +196,7 @@ class BosonCamAPI():
 
         if self.isConnect == True:
             CameraPN = FLR_BOSON_PARTNUMBER_T()
-            rValue, CameraPNval = pyClient.bosonGetCameraPN()
+            rValue, CameraPNval = self.myCam.bosonGetCameraPN()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 CameraPN = CameraPNval
@@ -217,7 +214,7 @@ class BosonCamAPI():
         camFPS = 0
 
         if self.isConnect == True:
-            rValue, camFPS = pyClient.sysctrlGetCameraFrameRate()
+            rValue, camFPS = self.myCam.sysctrlGetCameraFrameRate()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -229,7 +226,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.bosonReboot()
+            rValue = self.myCam.bosonReboot()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -242,7 +239,7 @@ class BosonCamAPI():
         rData = 0
 
         if self.isConnect == True:
-            returnVal, data = pyClient.bosonGetFFCMode()
+            returnVal, data = self.myCam.bosonGetFFCMode()
 
             if returnVal == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -267,7 +264,7 @@ class BosonCamAPI():
 
         if self.isConnect == True:
             data = FLR_BOSON_FFCMODE_E(val)
-            rValue = pyClient.bosonSetFFCMode(data)
+            rValue = self.myCam.bosonSetFFCMode(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -279,7 +276,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            returnVal, data = pyClient.bosonGetFFCFrameThreshold()
+            returnVal, data = self.myCam.bosonGetFFCFrameThreshold()
 
             if returnVal == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -295,7 +292,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.bosonSetFFCFrameThreshold(val)
+            rValue = self.myCam.bosonSetFFCFrameThreshold(val)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -307,7 +304,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.bosonGetOverTempThreshold()
+            rValue, data = self.myCam.bosonGetOverTempThreshold()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -319,7 +316,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.bosonGetMyriadTemp()
+            rValue, data = self.myCam.bosonGetMyriadTemp()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -331,7 +328,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.bosonGetGainMode()
+            rValue, data = self.myCam.bosonGetGainMode()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -352,7 +349,7 @@ class BosonCamAPI():
         if self.isConnect == True:
             if (val >= 0) and (val <= 2):
                 data = FLR_BOSON_GAINMODE_E(val)
-                rValue = pyClient.bosonSetGainMode(data)
+                rValue = self.myCam.bosonSetGainMode(data)
 
                 if rValue == FLR_RESULT.R_SUCCESS:
                     returnVal = 0
@@ -374,7 +371,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.agcGetOutlierCut()
+            rValue, data = self.myCam.agcGetOutlierCut()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -386,7 +383,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.agcSetOutlierCut(colVal)
+            rValue = self.myCam.agcSetOutlierCut(colVal)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -399,7 +396,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.agcGetMaxGain()
+            rValue, data = self.myCam.agcGetMaxGain()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -411,7 +408,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.agcSetMaxGain(val)
+            rValue = self.myCam.agcSetMaxGain(val)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -424,7 +421,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.agcGetdf()
+            rValue, data = self.myCam.agcGetdf()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -436,7 +433,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.agcSetdf(val)
+            rValue = self.myCam.agcSetdf(val)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -449,7 +446,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.agcGetGamma()
+            rValue, data = self.myCam.agcGetGamma()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -461,7 +458,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.agcSetGamma(val)
+            rValue = self.myCam.agcSetGamma(val)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -474,7 +471,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.agcGetPercentPerBin()
+            rValue, data = self.myCam.agcGetPercentPerBin()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -486,7 +483,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.agcSetPercentPerBin(val)
+            rValue = self.myCam.agcSetPercentPerBin(val)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -499,7 +496,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.agcGetLinearPercent()
+            rValue, data = self.myCam.agcGetLinearPercent()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -511,7 +508,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.agcSetLinearPercent(val)
+            rValue = self.myCam.agcSetLinearPercent(val)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -524,7 +521,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.agcGetDetailHeadroom()
+            rValue, data = self.myCam.agcGetDetailHeadroom()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -536,7 +533,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.agcSetDetailHeadroom(val)
+            rValue = self.myCam.agcSetDetailHeadroom(val)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -549,7 +546,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.agcGetd2br()
+            rValue, data = self.myCam.agcGetd2br()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -561,7 +558,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.agcSetd2br(val)
+            rValue = self.myCam.agcSetd2br(val)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -574,7 +571,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.agcGetSigmaR()
+            rValue, data = self.myCam.agcGetSigmaR()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -586,7 +583,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.agcSetSigmaR(val)
+            rValue = self.myCam.agcSetSigmaR(val)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -599,7 +596,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.agcGetUseEntropy()
+            rValue, data = self.myCam.agcGetUseEntropy()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -619,7 +616,7 @@ class BosonCamAPI():
             # 0은 disable
             # 1은 enable
 
-            rValue = pyClient.agcSetUseEntropy(data)
+            rValue = self.myCam.agcSetUseEntropy(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -632,7 +629,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.gaoGetFfcState()
+            rValue, data = self.myCam.gaoGetFfcState()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -653,7 +650,7 @@ class BosonCamAPI():
             # 0은 disable
             # 1은 enable
 
-            rValue = pyClient.gaoSetFfcState(data)
+            rValue = self.myCam.gaoSetFfcState(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -666,7 +663,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.gaoGetGainState()
+            rValue, data = self.myCam.gaoGetGainState()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -686,7 +683,7 @@ class BosonCamAPI():
             # 0은 disable
             # 1은 enable
 
-            rValue = pyClient.gaoSetGainState(data)
+            rValue = self.myCam.gaoSetGainState(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -699,7 +696,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.bprGetState()
+            rValue, data = self.myCam.bprGetState()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -719,7 +716,7 @@ class BosonCamAPI():
             # 0은 disable
             # 1은 enable
 
-            rValue = pyClient.bprSetState(data)
+            rValue = self.myCam.bprSetState(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -732,7 +729,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.scnrGetEnableState()
+            rValue, data = self.myCam.scnrGetEnableState()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -752,7 +749,7 @@ class BosonCamAPI():
             # 0은 disable
             # 1은 enable
 
-            rValue = pyClient.scnrSetEnableState(data)
+            rValue = self.myCam.scnrSetEnableState(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -765,7 +762,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.tfGetEnableState()
+            rValue, data = self.myCam.tfGetEnableState()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -785,7 +782,7 @@ class BosonCamAPI():
             # 0은 disable
             # 1은 enable
 
-            rValue = pyClient.tfSetEnableState(data)
+            rValue = self.myCam.tfSetEnableState(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -798,7 +795,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.spnrGetEnableState()
+            rValue, data = self.myCam.spnrGetEnableState()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -818,7 +815,7 @@ class BosonCamAPI():
             # 0은 disable
             # 1은 enable
 
-            rValue = pyClient.spnrSetEnableState(data)
+            rValue = self.myCam.spnrSetEnableState(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -831,7 +828,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.gaoGetSffcState()
+            rValue, data = self.myCam.gaoGetSffcState()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -851,7 +848,7 @@ class BosonCamAPI():
             # 0은 disable
             # 1은 enable
 
-            rValue = pyClient.gaoSetSffcState(data)
+            rValue = self.myCam.gaoSetSffcState(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -870,7 +867,7 @@ class BosonCamAPI():
         data = None
         if self.isConnect == True:
             data = FLR_BOSON_GAIN_SWITCH_PARAMS_T()
-            rValue, data = pyClient.bosonGetGainSwitchParams()
+            rValue, data = self.myCam.bosonGetGainSwitchParams()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -893,7 +890,7 @@ class BosonCamAPI():
             data.pLowToHighPercent = int(pLowToHigh)
             data.hysteresisPercent = int(hyPercent)
 
-            rValue = pyClient.bosonSetGainSwitchParams(data)
+            rValue = self.myCam.bosonSetGainSwitchParams(data)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -906,7 +903,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.bosonGetFFCTempThreshold()
+            rValue, data = self.myCam.bosonGetFFCTempThreshold()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -919,7 +916,7 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.bosonSetFFCTempThreshold(val)
+            rValue = self.myCam.bosonSetFFCTempThreshold(val)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -931,7 +928,7 @@ class BosonCamAPI():
         returnVal = -1
         data = None
         if self.isConnect == True:
-            rValue, data = pyClient.gaoGetNumFFCFrames()
+            rValue, data = self.myCam.gaoGetNumFFCFrames()
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
@@ -944,13 +941,28 @@ class BosonCamAPI():
         returnVal = -1
 
         if self.isConnect == True:
-            rValue = pyClient.gaoSetNumFFCFrames(val)
+            rValue = self.myCam.gaoSetNumFFCFrames(val)
 
             if rValue == FLR_RESULT.R_SUCCESS:
                 returnVal = 0
             
 
         return returnVal
+    
+    def port_check(self):
+        ports = serial.tools.list_ports.comports()
+        available_ports = []
+        for idx, port in enumerate(ports):
+            available_ports.append([port.device, port.serial_number])
+        return available_ports
+
+
+if __name__ == "__main__":
+    CAMERA  = BosonCamAPI("COM5")
+    ret = CAMERA.getSerialNumber()
+    colorlud = CAMERA.colorLutGetId()
+    print(f"ret = {ret}")
+    print(f"colorlud = {colorlud}")
     
 
     
